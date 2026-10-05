@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสารบรรณอิเล็กทรอนิกส์ (e-Saraban)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid me-2 fa-folder-open text-2xl text-yellow-400"></i>
+                <h1 class="text-xl font-bold" id="app-title-display">ระบบสารบรรณอิเล็กทรอนิกส์ (e-Saraban)</h1>
+            </div>
+            <div class="text-sm bg-indigo-800 px-3 py-1 rounded-full text-indigo-200" id="current-agency-display">
+                หน่วยงาน: สำนักงานทั่วไป
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto w-full px-4 py-6 flex-1 flex flex-col md:flex-row gap-6">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-white rounded-xl shadow-sm p-4 space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 bg-indigo-50 text-indigo-700 font-medium">
+                <i class="fa-solid fa-chart-pie w-5"></i>
+                <span>ภาพรวม (Dashboard)</span>
+            </button>
+            <button onclick="switchTab('documents')" id="nav-documents" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-slate-600 hover:bg-slate-50">
+                <i class="fa-solid fa-file-invoice w-5"></i>
+                <span>ทะเบียนหนังสือรับ-ส่ง</span>
+            </button>
+            <button onclick="switchTab('add-doc')" id="nav-add-doc" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-slate-600 hover:bg-slate-50">
+                <i class="fa-solid fa-plus-circle w-5"></i>
+                <span>ลงทะเบียนหนังสือใหม่</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-slate-600 hover:bg-slate-50">
+                <i class="fa-solid fa-gear w-5"></i>
+                <span>ตั้งค่าระบบ</span>
+            </button>
+        </aside>
+
+        <!-- Main View Area -->
+        <main class="flex-1 bg-white rounded-xl shadow-sm p-6">
+
+            <!-- TAB 1: Dashboard -->
+            <section id="tab-dashboard" class="space-y-6">
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">สถิติหนังสือราชการ</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                        <p class="text-sm text-blue-600 font-medium">หนังสือรับทั้งหมด</p>
+                        <p class="text-3xl font-bold text-blue-900 mt-1" id="stat-incoming">0</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl">
+                        <p class="text-sm text-emerald-600 font-medium">หนังสือส่งทั้งหมด</p>
+                        <p class="text-3xl font-bold text-emerald-900 mt-1" id="stat-outgoing">0</p>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl">
+                        <p class="text-sm text-amber-600 font-medium">รอดำเนินการ</p>
+                        <p class="text-3xl font-bold text-amber-900 mt-1" id="stat-pending">0</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="font-bold text-slate-700 mb-3">รายการหนังสือล่าสุด</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">ประเภท</th>
+                                    <th class="p-3">เลขที่หนังสือ</th>
+                                    <th class="p-3">เรื่อง</th>
+                                    <th class="p-3">วันที่</th>
+                                    <th class="p-3 rounded-r-lg">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-docs-tbody" class="divide-y divide-slate-100">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Documents List & Search -->
+            <section id="tab-documents" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                    <h2 class="text-lg font-bold text-slate-800">ทะเบียนหนังสือรับ-ส่ง</h2>
+                    <div class="flex w-full sm:w-auto gap-2">
+                        <input type="text" id="search-input" oninput="renderDocumentsTable()" placeholder="ค้นหาตามเลขที่ หรือ เรื่อง..." class="border rounded-lg px-3 py-2 text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <select id="filter-type" onchange="renderDocumentsTable()" class="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL">ทั้งหมด</option>
+                            <option value="รับ">หนังสือรับ</option>
+                            <option value="ส่ง">หนังสือส่ง</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-700">
+                            <tr>
+                                <th class="p-3">ประเภท</th>
+                                <th class="p-3">เลขทะเบียน</th>
+                                <th class="p-3">เรื่อง</th>
+                                <th class="p-3">จาก/ถึง</th>
+                                <th class="p-3">วันที่</th>
+                                <th class="p-3">สถานะ</th>
+                                <th class="p-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-docs-tbody" class="divide-y divide-slate-100">
+                            <!-- Dynamic Render -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 3: Add / Edit Document Form -->
+            <section id="tab-add-doc" class="space-y-4 hidden">
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2" id="form-title">ลงทะเบียนหนังสือใหม่</h2>
+                
+                <form id="doc-form" onsubmit="handleFormSubmit(event)" class="space-y-4 max-w-2xl">
+                    <input type="hidden" id="edit-doc-id">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ประเภทหนังสือ <span class="text-red-500">*</span></label>
+                            <select id="doc-type" required onchange="autoGenerateDocNumber()" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="รับ">หนังสือรับ (Incoming)</option>
+                                <option value="ส่ง">หนังสือส่ง (Outgoing)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่หนังสือ / เลขรับ <span class="text-red-500">*</span></label>
+                            <input type="text" id="doc-no" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">เรื่อง <span class="text-red-500">*</span></label>
+                        <input type="text" id="doc-title" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">จาก (ผู้ส่ง)</label>
+                            <input type="text" id="doc-from" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ถึง (ผู้รับ)</label>
+                            <input type="text" id="doc-to" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">วันที่ลงรับ/ออกหนังสือ <span class="text-red-500">*</span></label>
+                            <input type="date" id="doc-date" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ชั้นความเร็ว</label>
+                            <select id="doc-urgency" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="ปกติ">ปกติ</option>
+                                <option value="ด่วน">ด่วน</option>
+                                <option value="ด่วนมาก">ด่วนมาก</option>
+                                <option value="ด่วนที่สุด">ด่วนที่สุด</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">สถานะหนังสือ</label>
+                        <select id="doc-status" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-4 flex gap-3">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-save"></i>
+                            <span>บันทึกข้อมูล</span>
+                        </button>
+                        <button type="button" onclick="resetForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-5 py-2.5 rounded-lg text-sm">
+                            ยกเลิก / ล้างฟอร์ม
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- TAB 4: System Settings -->
+            <section id="tab-settings" class="space-y-4 hidden">
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2">ตั้งค่าระบบ e-Saraban</h2>
+                
+                <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-4 max-w-xl">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อหน่วยงาน / รหัสส่วนราชการ</label>
+                        <input type="text" id="setting-agency" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">คำนำหน้าเลขหนังสือส่ง (เช่น รม 0021/)</label>
+                        <input type="text" id="setting-prefix" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ลำดับเลขหนังสือส่งล่าสุด</label>
+                        <input type="number" id="setting-counter" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>บันทึกการตั้งค่า</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Default initial application data
+        let documents = JSON.parse(localStorage.getItem('esaraban_docs')) || [
+            { id: 1, type: 'รับ', no: '101/2569', title: 'ขออนุมัติจัดโครงการอบรมคอมพิวเตอร์', from: 'ฝ่ายเทคโนโลยี', to: 'ผู้อำนวยการ', date: '2026-10-01', urgency: 'ด่วน', status: 'เสร็จสิ้น' },
+            { id: 2, type: 'ส่ง', no: 'รม 001/102', title: 'แจ้งกำหนดการประชุมคณะกรรมการ', from: 'สำนักงานทั่วไป', to: 'หน่วยงานภายนอก', date: '2026-10-03', urgency: 'ปกติ', status: 'รอดำเนินการ' }
+        ];
+
+        let settings = JSON.parse(localStorage.getItem('esaraban_settings')) || {
+            agency: 'สำนักงานบริหารทั่วไป',
+            prefix: 'รม 001/',
+            counter: 103
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettingsForm();
+            updateUIInfo();
+            renderDashboard();
+            renderDocumentsTable();
+            // Set default date to today
+            document.getElementById('doc-date').valueAsDate = new Date();
+        });
+
+        // Navigation Switcher
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'documents', 'add-doc', 'settings'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).className = 'nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-slate-600 hover:bg-slate-50';
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).className = 'nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 bg-indigo-50 text-indigo-700 font-medium';
+            
+            if(tabName === 'add-doc' && !document.getElementById('edit-doc-id').value) {
+                autoGenerateDocNumber();
+            }
+        }
+
+        // Render Dashboard Stats & Recent Docs
+        function renderDashboard() {
+            const incoming = documents.filter(d => d.type === 'รับ').length;
+            const outgoing = documents.filter(d => d.type === 'ส่ง').length;
+            const pending = documents.filter(d => d.status === 'รอดำเนินการ').length;
+
+            document.getElementById('stat-incoming').textContent = incoming;
+            document.getElementById('stat-outgoing').textContent = outgoing;
+            document.getElementById('stat-pending').textContent = pending;
+
+            const tbody = document.getElementById('recent-docs-tbody');
+            tbody.innerHTML = '';
+            
+            documents.slice(-5).reverse().forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs ${doc.type === 'รับ' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}">${doc.type}</span></td>
+                    <td class="p-3 font-medium">${doc.no}</td>
+                    <td class="p-3">${doc.title}</td>
+                    <td class="p-3 text-slate-500">${doc.date}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs bg-slate-100 text-slate-700">${doc.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Documents Table with Search
+        function renderDocumentsTable() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+            const tbody = document.getElementById('all-docs-tbody');
+            tbody.innerHTML = '';
+
+            const filtered = documents.filter(d => {
+                const matchesSearch = d.no.toLowerCase().includes(search) || d.title.toLowerCase().includes(search);
+                const matchesType = filterType === 'ALL' || d.type === filterType;
+                return matchesSearch && matchesType;
+            });
+
+            filtered.reverse().forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs ${doc.type === 'รับ' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}">${doc.type}</span></td>
+                    <td class="p-3 font-medium">${doc.no}</td>
+                    <td class="p-3 font-medium text-slate-800">${doc.title}</td>
+                    <td class="p-3 text-xs text-slate-500">จาก: ${doc.from || '-'}<br>ถึง: ${doc.to || '-'}</td>
+                    <td class="p-3 text-slate-500">${doc.date}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs ${doc.status === 'เสร็จสิ้น' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${doc.status}</span></td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="editDoc(${doc.id})" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteDoc(${doc.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Auto Generate Document Number
+        function autoGenerateDocNumber() {
+            const type = document.getElementById('doc-type').value;
+            if (type === 'ส่ง') {
+                document.getElementById('doc-no').value = `${settings.prefix}${settings.counter}`;
+            } else {
+                const year = new Date().getFullYear() + 543;
+                const recCount = documents.filter(d => d.type === 'รับ').length + 1;
+                document.getElementById('doc-no').value = `${recCount}/${year}`;
+            }
+        }
+
+        // Handle Add/Edit Document Form
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-doc-id').value;
+            
+            const docData = {
+                id: editId ? parseInt(editId) : Date.now(),
+                type: document.getElementById('doc-type').value,
+                no: document.getElementById('doc-no').value,
+                title: document.getElementById('doc-title').value,
+                from: document.getElementById('doc-from').value,
+                to: document.getElementById('doc-to').value,
+                date: document.getElementById('doc-date').value,
+                urgency: document.getElementById('doc-urgency').value,
+                status: document.getElementById('doc-status').value
+            };
+
+            if (editId) {
+                const index = documents.findIndex(d => d.id === parseInt(editId));
+                if (index !== -1) documents[index] = docData;
+            } else {
+                documents.push(docData);
+                if (docData.type === 'ส่ง') {
+                    settings.counter++;
+                    saveSettingsToStorage();
+                }
+            }
+
+            saveDocsToStorage();
+            resetForm();
+            renderDashboard();
+            renderDocumentsTable();
+            switchTab('documents');
+        }
+
+        // Edit Document
+        function editDoc(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+
+            document.getElementById('edit-doc-id').value = doc.id;
+            document.getElementById('doc-type').value = doc.type;
+            document.getElementById('doc-no').value = doc.no;
+            document.getElementById('doc-title').value = doc.title;
+            document.getElementById('doc-from').value = doc.from;
+            document.getElementById('doc-to').value = doc.to;
+            document.getElementById('doc-date').value = doc.date;
+            document.getElementById('doc-urgency').value = doc.urgency;
+            document.getElementById('doc-status').value = doc.status;
+
+            document.getElementById('form-title').textContent = 'แก้ไขข้อมูลหนังสือ';
+            switchTab('add-doc');
+        }
+
+        // Delete Document
+        function deleteDoc(id) {
+            if (confirm('คุณต้องการลบหนังสือรายการนี้ใช่หรือไม่?')) {
+                documents = documents.filter(d => d.id !== id);
+                saveDocsToStorage();
+                renderDashboard();
+                renderDocumentsTable();
+            }
+        }
+
+        // Reset Form
+        function resetForm() {
+            document.getElementById('doc-form').reset();
+            document.getElementById('edit-doc-id').value = '';
+            document.getElementById('form-title').textContent = 'ลงทะเบียนหนังสือใหม่';
+            document.getElementById('doc-date').valueAsDate = new Date();
+        }
+
+        // Settings Functions
+        function loadSettingsForm() {
+            document.getElementById('setting-agency').value = settings.agency;
+            document.getElementById('setting-prefix').value = settings.prefix;
+            document.getElementById('setting-counter').value = settings.counter;
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            settings.agency = document.getElementById('setting-agency').value;
+            settings.prefix = document.getElementById('setting-prefix').value;
+            settings.counter = parseInt(document.getElementById('setting-counter').value);
+            
+            saveSettingsToStorage();
+            updateUIInfo();
+            alert('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
+        }
+
+        function updateUIInfo() {
+            document.getElementById('current-agency-display').textContent = `หน่วยงาน: ${settings.agency}`;
+        }
+
+        // LocalStorage Helpers
+        function saveDocsToStorage() {
+            localStorage.setItem('esaraban_docs', JSON.stringify(documents));
+        }
+
+        function saveSettingsToStorage() {
+            localStorage.setItem('esaraban_settings', JSON.stringify(settings));
+        }
+    </script>
+</body>
+</html>
